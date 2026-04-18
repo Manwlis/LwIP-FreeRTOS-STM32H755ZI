@@ -1,0 +1,12 @@
+Ethernet descriptors	1 error per X packets
+8						175k
+12						800k
+16						30m
+
+lwip mailboxs TCPIP_MBOX_SIZE etc.
+default values create throuput drops (na bgalw kana screenshot?)
+ETH_RX_BUFFER_CNT & PBUF_POOL_SIZE should also be increased
+sys.mbox.err in lwip_stats show if the problem exist
+
+#define INTERFACE_THREAD_STACK_SIZE ( 1024 )
+default 350 crasses
