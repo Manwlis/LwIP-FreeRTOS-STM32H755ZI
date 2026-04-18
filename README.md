@@ -2,9 +2,9 @@
 
 A high-performance implementation of LwIP + FreeRTOS running on the Cortex-M7 core of the STM32H755ZI.
 
-I initially created this project to familiarize myself with the STM toolchain. The examples provided by STM and any other public repos I could find were questionable at best, so I published it to provide a well tuned reference.
+I initially created this project to familiarize myself with the STM toolchain, but the examples provided by STM and any other public repos I could find were questionable at best. I am publishing it to provide a better reference.
 
-This README provides a high-level overview of the project. It assumes familiarity with STM32, FreeRTOS, and LwIP. For full details, refer to the .ioc file and source code.
+This README provides a high-level overview of the project and focuses on the most interesting pasts. It assumes familiarity with STM32, FreeRTOS, and LwIP. For full details, refer to the .ioc file and source code.
 
 ## Description
 
