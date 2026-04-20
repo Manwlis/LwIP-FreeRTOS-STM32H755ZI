@@ -56,6 +56,11 @@
 
 /* External variables --------------------------------------------------------*/
 extern ETH_HandleTypeDef heth;
+extern RAMECC_HandleTypeDef hramecc1_m1;
+extern RAMECC_HandleTypeDef hramecc2_m1;
+extern RAMECC_HandleTypeDef hramecc2_m2;
+extern RAMECC_HandleTypeDef hramecc2_m3;
+extern RAMECC_HandleTypeDef hramecc2_m4;
 extern TIM_HandleTypeDef htim6;
 
 /* USER CODE BEGIN EV */
@@ -200,6 +205,24 @@ void ETH_IRQHandler(void)
   /* USER CODE BEGIN ETH_IRQn 1 */
 
   /* USER CODE END ETH_IRQn 1 */
+}
+
+/**
+  * @brief This function handles RAM ECC diagnostic global interrupt.
+  */
+void ECC_IRQHandler(void)
+{
+  /* USER CODE BEGIN ECC_IRQn 0 */
+
+  /* USER CODE END ECC_IRQn 0 */
+  HAL_RAMECC_IRQHandler(&hramecc1_m1);
+  HAL_RAMECC_IRQHandler(&hramecc2_m1);
+  HAL_RAMECC_IRQHandler(&hramecc2_m2);
+  HAL_RAMECC_IRQHandler(&hramecc2_m3);
+  HAL_RAMECC_IRQHandler(&hramecc2_m4);
+  /* USER CODE BEGIN ECC_IRQn 1 */
+
+  /* USER CODE END ECC_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

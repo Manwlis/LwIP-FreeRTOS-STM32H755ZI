@@ -14,7 +14,7 @@ Right now there are two tests in _cube_lwip_rtos_CM7/Core/Src/tests.h_.
 
 * _udp_tx_benchmark()_. It is used to test the stack by itself. There is no need to set up a server on host machine, just a packet sniffer like Wireshark is enough to validate its functionality. There are two implementations, one with the RAW API and one with the socket API.
 
-* _tcp_loopback()_. It requires the host machine to have set up its ethernet connection with the IP address 192.168.0.1 and subnet mask 255.255.255.0, and run the server.py script first. It achieves a throughput of 92.8 Mbps on the application level. Right now there is only a socket API implementation.
+* _tcp_loopback()_. It requires the host machine to have set up its ethernet connection with the IP address 192.168.0.1 and subnet mask 255.255.255.0, and run the server.py script first. It achieves a throughput of 92.87 Mbps on the application level. Right now there is only a socket API implementation.
 
 ### Memory Management
 The following diagram shows how the RAM of the device is set up. AXI SRAM, SRAM1 and SRAM2 are exclusive to CM7 while SRAM3 is exclusive to CM4. To achieve this, the MPU settings and the linker scripts have been modified.
@@ -43,19 +43,20 @@ According to Build Analyzer the DMA RX Pool takes 61,25 KB. The size of it depen
 
 ### Ethernet Data Corruption
 
-The server.py script reports if any packets have been lost or corrupted. There seems to be some random and infrequent data corruption, depending on the throughput. The MAC layer and LwIP are raising no errors, and the frequency of the corruptions are also depended by the resources allocated to the ethernet DMA.
+The server.py script reports if any packets have been lost or corrupted. There seems to be some random and infrequent data corruption, depending on the throughput. The MAC layer and LwIP are raising no errors, and the frequency of the corruptions are also depended by the resources allocated to the ethernet DMA. I have also enabled the SRAM EEC monitoring units and they raise no interrupts, so SRAM corruption can also be crossed out. 
 
-I suspect the cause is that the DMA handling in STM drivers is problematic and the corruption is produced by cache coherency issues. Trying to set up the DMA RX pool as non cacheable produces hard faults, likely due to DMA alignment or descriptor expectations, and cannot be used to alleviate this problem. 
+I suspect the cause is that the DMA handling in STM drivers is problematic and the corruption is produced by cache coherency issues. Trying to set up the DMA RX pool as non cacheable produces hard faults, likely due to DMA alignment or descriptor expectations, and cannot be used to alleviate this problem.
+
 
 What I found reduces the corruption rate is increasing the number of ethernet descriptors. This probably reduces the hit rate on the cache and minimize the corruption as a sideeffect.
 
-| ETH Descriptors |  Corruption Rate |
-| --------------: | ---------------: |
-|               8 | 1 / 175k packets |
-|              12 | 1 / 800k packets |
-|              16 |  1 / 30m packets |
+| ETH Descriptors |    Corruption Rate |
+| --------------: | -----------------: |
+|               8 |   1 / 175k packets |
+|              12 |   1 / 800k packets |
+|              16 |  < 1 / 50m packets |
 
-1 corrupted packet per 30 million is acceptable for this demo. Furthermore, the size of the DMA RX Pool depends on the settings of the Ethernet, thus there is a limit on the number of descriptors. If you require zero packet corruption, increasing the Ethernet descriptors is most probably not enough, the drivers need some touching.
+1 corrupted packet per 50 million is acceptable for this demo. Furthermore, the size of the DMA RX Pool depends on the settings of the Ethernet, thus there is a limit on the number of descriptors. If you require zero packet corruption, increasing the Ethernet descriptors is most probably not enough, the drivers need some touching.
 
 The _ETH_RX_BUFFER_CNT_ & _PBUF_POOL_SIZE_ constants of LwIP have to also be increased accordingly to the number of ETH descriptors.
 
