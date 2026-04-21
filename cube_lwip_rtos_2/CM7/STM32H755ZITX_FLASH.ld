@@ -178,18 +178,15 @@ SECTIONS
   } >RAM_D1
    
    /* TODO: make these 3 one region. */
-  .RxDescripSection (NOLOAD) :
-  { . = ABSOLUTE(0x30020000);
+  .lwip_section (NOLOAD) :
+  {
+  	. = ABSOLUTE(0x30020000);
     *(.RxDescripSection)
-  } >RAM_D2
-  
-  .TxDescripSection (NOLOAD) :
-  { . = ABSOLUTE(0x30020200);
+
+	. = ABSOLUTE(0x30020400);
     *(.TxDescripSection)
-  } >RAM_D2
-  
-  .Rx_PoolSection (NOLOAD) :
-  { . = ABSOLUTE(0x30020400);
+	
+	. = ABSOLUTE(0x30021000);
     *(.Rx_PoolSection)
   } >RAM_D2
 

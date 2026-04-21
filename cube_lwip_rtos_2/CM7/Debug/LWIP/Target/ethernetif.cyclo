@@ -1,6 +1,6 @@
 ../LWIP/Target/ethernetif.c:756:9:ETH_PHY_IO_DeInit	1
 ../LWIP/Target/ethernetif.c:482:6:ethernetif_input	5
-../LWIP/Target/ethernetif.c:382:14:low_level_output	20
+../LWIP/Target/ethernetif.c:382:14:low_level_output	7
 ../LWIP/Target/ethernetif.c:799:9:ETH_PHY_IO_GetTick	1
 ../LWIP/Target/ethernetif.c:739:9:ETH_PHY_IO_Init	1
 ../LWIP/Target/ethernetif.c:768:9:ETH_PHY_IO_ReadReg	1

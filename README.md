@@ -45,8 +45,7 @@ According to Build Analyzer the DMA RX Pool takes 61,25 KB. The size of it depen
 
 The server.py script reports if any packets have been lost or corrupted. There seems to be some random and infrequent data corruption, depending on the throughput. The MAC layer and LwIP are raising no errors, and the frequency of the corruptions are also depended by the resources allocated to the ethernet DMA. I have also enabled the SRAM EEC monitoring units and they raise no interrupts, so SRAM corruption can also be crossed out. 
 
-I suspect the cause is that the DMA handling in STM drivers is problematic and the corruption is produced by cache coherency issues. Trying to set up the DMA RX pool as non cacheable produces hard faults, likely due to DMA alignment or descriptor expectations, and cannot be used to alleviate this problem.
-
+I suspect the cause is that the DMA handling in STM drivers is problematic and the corruption is produced by cache coherency issues. Setting up the DMA RX pool as non-cacheable kills performance, throughput varies between 50 and 80 Mbps. Another possible explanation is that the driver runs out of resources and silently loses data, but I would expect to see lost packets too, not just corrupted ones.
 
 What I found reduces the corruption rate is increasing the number of ethernet descriptors. This probably reduces the hit rate on the cache and minimize the corruption as a sideeffect.
 
@@ -56,9 +55,9 @@ What I found reduces the corruption rate is increasing the number of ethernet de
 |              12 |   1 / 800k packets |
 |              16 |  < 1 / 50m packets |
 
-1 corrupted packet per 50 million is acceptable for this demo. Furthermore, the size of the DMA RX Pool depends on the settings of the Ethernet, thus there is a limit on the number of descriptors. If you require zero packet corruption, increasing the Ethernet descriptors is most probably not enough, the drivers need some touching.
+With 32 ETH descriptors, after 5 hours operating at max throughput, not a single corrupted packet was detected. This is acceptable for this demo and most applications. Increasing the number of descriptors further might get difficult, as the size of the DMA RX Pool must also be increased. If you require zero packet corruption with 100% certainty, increasing the Ethernet descriptors is most probably not enough, the drivers may need some touching.
 
-The _ETH_RX_BUFFER_CNT_ & _PBUF_POOL_SIZE_ constants of LwIP have to also be increased accordingly to the number of ETH descriptors.
+The _ETH_RX_BUFFER_CNT_ & _PBUF_POOL_SIZE_ constants of LwIP have to also be increased according to the number of ETH descriptors.
 
 ### LwIP Settings
 
@@ -66,7 +65,7 @@ The default settings of LwIP in CubeMX are not acceptable and need quite a bit o
 
 ### Other Settings
 
-* As is common, TIM6 is used as timebase source for CM7, as required by FreeRTOS.
+* TIM6 is used as timebase source for CM7, as required by FreeRTOS.
 * The operating clock of CM7 is set up to 400MHz. It could be raised up to 480MHz but I didn't really want to deal with the power supplies and regulator.
 
 ## How to Run

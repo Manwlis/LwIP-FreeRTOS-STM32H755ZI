@@ -68,8 +68,8 @@ RAMECC_HandleTypeDef hramecc2_m4;
 
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = { .name = "defaultTask" , .stack_size = 256 * 4 ,
-                                                .priority = (osPriority_t) osPriorityNormal , };
+const osThreadAttr_t defaultTask_attributes =
+        { .name = "defaultTask" , .stack_size = 256 * 4 , .priority = (osPriority_t) osPriorityNormal , };
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -301,8 +301,8 @@ void SystemClock_Config( void )
 
 	/** Initializes the CPU, AHB and APB buses clocks
 	 */
-	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1
-	        | RCC_CLOCKTYPE_PCLK2 | RCC_CLOCKTYPE_D3PCLK1 | RCC_CLOCKTYPE_D1PCLK1;
+	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2
+	        | RCC_CLOCKTYPE_D3PCLK1 | RCC_CLOCKTYPE_D1PCLK1;
 	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
 	RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
 	RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
@@ -376,33 +376,23 @@ static void MX_RAMECC_Init( void )
 
 	/* Enable monitor notifications */
 	/* ECC single error notification and ECC double error notification */
-	if( HAL_RAMECC_EnableNotification(
-	        &hramecc1_m1 , ( RAMECC_IT_MONITOR_SINGLEERR_R | RAMECC_IT_MONITOR_DOUBLEERR_R ) )
-	        != HAL_OK )
+	if( HAL_RAMECC_EnableNotification( &hramecc1_m1 , ( RAMECC_IT_MONITOR_SINGLEERR_R | RAMECC_IT_MONITOR_DOUBLEERR_R ) ) != HAL_OK )
 	{
 		Error_Handler();
 	}
-	if( HAL_RAMECC_EnableNotification(
-	        &hramecc2_m1 , ( RAMECC_IT_MONITOR_SINGLEERR_R | RAMECC_IT_MONITOR_DOUBLEERR_R ) )
-	        != HAL_OK )
+	if( HAL_RAMECC_EnableNotification( &hramecc2_m1 , ( RAMECC_IT_MONITOR_SINGLEERR_R | RAMECC_IT_MONITOR_DOUBLEERR_R ) ) != HAL_OK )
 	{
 		Error_Handler();
 	}
-	if( HAL_RAMECC_EnableNotification(
-	        &hramecc2_m2 , ( RAMECC_IT_MONITOR_SINGLEERR_R | RAMECC_IT_MONITOR_DOUBLEERR_R ) )
-	        != HAL_OK )
+	if( HAL_RAMECC_EnableNotification( &hramecc2_m2 , ( RAMECC_IT_MONITOR_SINGLEERR_R | RAMECC_IT_MONITOR_DOUBLEERR_R ) ) != HAL_OK )
 	{
 		Error_Handler();
 	}
-	if( HAL_RAMECC_EnableNotification(
-	        &hramecc2_m3 , ( RAMECC_IT_MONITOR_SINGLEERR_R | RAMECC_IT_MONITOR_DOUBLEERR_R ) )
-	        != HAL_OK )
+	if( HAL_RAMECC_EnableNotification( &hramecc2_m3 , ( RAMECC_IT_MONITOR_SINGLEERR_R | RAMECC_IT_MONITOR_DOUBLEERR_R ) ) != HAL_OK )
 	{
 		Error_Handler();
 	}
-	if( HAL_RAMECC_EnableNotification(
-	        &hramecc2_m4 , ( RAMECC_IT_MONITOR_SINGLEERR_R | RAMECC_IT_MONITOR_DOUBLEERR_R ) )
-	        != HAL_OK )
+	if( HAL_RAMECC_EnableNotification( &hramecc2_m4 , ( RAMECC_IT_MONITOR_SINGLEERR_R | RAMECC_IT_MONITOR_DOUBLEERR_R ) ) != HAL_OK )
 	{
 		Error_Handler();
 	}
@@ -539,7 +529,7 @@ void MPU_Config( void )
 	 */
 	MPU_InitStruct.Number = MPU_REGION_NUMBER2;
 	MPU_InitStruct.BaseAddress = 0x30020000;
-	MPU_InitStruct.Size = MPU_REGION_SIZE_1KB;
+	MPU_InitStruct.Size = MPU_REGION_SIZE_4KB;
 	MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
 	MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
 	MPU_InitStruct.IsBufferable = MPU_ACCESS_BUFFERABLE;

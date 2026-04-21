@@ -1,6 +1,6 @@
-../Core/Src/main.c:485:6:StartDefaultTask	5
-../Core/Src/main.c:96:6:HAL_RAMECC_DetectErrorCallback	8
-../Core/Src/main.c:264:6:SystemClock_Config	4
-../Core/Src/main.c:128:5:main	23
-../Core/Src/main.c:572:6:HAL_TIM_PeriodElapsedCallback	2
-../Core/Src/main.c:590:6:Error_Handler	1
+../Core/Src/main.c:487:6:StartDefaultTask	5
+../Core/Src/main.c:99:6:HAL_RAMECC_DetectErrorCallback	1
+../Core/Src/main.c:267:6:SystemClock_Config	4
+../Core/Src/main.c:131:5:main	23
+../Core/Src/main.c:576:6:HAL_TIM_PeriodElapsedCallback	2
+../Core/Src/main.c:594:6:Error_Handler	1

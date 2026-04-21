@@ -1,21 +1,21 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * File Name          : ethernetif.c
-  * Description        : This file provides code for the configuration
-  *                      of the ethernetif.c MiddleWare.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2026 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * File Name          : ethernetif.c
+ * Description        : This file provides code for the configuration
+ *                      of the ethernetif.c MiddleWare.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2026 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
@@ -96,7 +96,7 @@ typedef struct
 } RxBuff_t;
 
 /* Memory Pool Declaration */
-#define ETH_RX_BUFFER_CNT             40U
+#define ETH_RX_BUFFER_CNT             64U
 LWIP_MEMPOOL_DECLARE(RX_POOL, ETH_RX_BUFFER_CNT, sizeof(RxBuff_t), "Zero-copy RX PBUF pool");
 
 /* Variable Definitions */
@@ -105,13 +105,13 @@ static uint8_t RxAllocStatus;
 
 #pragma location=0x30000000
 ETH_DMADescTypeDef  DMARxDscrTab[ETH_RX_DESC_CNT]; /* Ethernet Rx DMA Descriptors */
-#pragma location=0x30020200
+#pragma location=0x30020400
 ETH_DMADescTypeDef  DMATxDscrTab[ETH_TX_DESC_CNT]; /* Ethernet Tx DMA Descriptors */
 
 #elif defined ( __CC_ARM )  /* MDK ARM Compiler */
 
 __attribute__((at(0x30000000))) ETH_DMADescTypeDef  DMARxDscrTab[ETH_RX_DESC_CNT]; /* Ethernet Rx DMA Descriptors */
-__attribute__((at(0x30020200))) ETH_DMADescTypeDef  DMATxDscrTab[ETH_TX_DESC_CNT]; /* Ethernet Tx DMA Descriptors */
+__attribute__((at(0x30020400))) ETH_DMADescTypeDef  DMATxDscrTab[ETH_TX_DESC_CNT]; /* Ethernet Tx DMA Descriptors */
 
 #elif defined ( __GNUC__ ) /* GNU Compiler */
 
@@ -121,7 +121,7 @@ ETH_DMADescTypeDef DMATxDscrTab[ETH_TX_DESC_CNT] __attribute__((section(".TxDesc
 #endif
 
 #if defined ( __ICCARM__ ) /*!< IAR Compiler */
-#pragma location = 0x30020400
+#pragma location = 0x30020800
 extern u8_t memp_memory_RX_POOL_base[];
 
 #elif defined ( __CC_ARM ) /* MDK ARM Compiler */
@@ -211,7 +211,7 @@ static void low_level_init(struct netif *netif)
 {
   HAL_StatusTypeDef hal_eth_init_status = HAL_OK;
 /* USER CODE BEGIN OS_THREAD_ATTR_CMSIS_RTOS_V2 */
-  osThreadAttr_t attributes;
+	osThreadAttr_t attributes;
 /* USER CODE END OS_THREAD_ATTR_CMSIS_RTOS_V2 */
   uint32_t duplex, speed = 0;
   int32_t PHYLinkState = 0;
@@ -234,7 +234,7 @@ static void low_level_init(struct netif *netif)
 
   /* USER CODE BEGIN MACADDRESS */
 
-  ETH_TxPacketConfigTypeDef TxConfig;
+	ETH_TxPacketConfigTypeDef TxConfig;
   /* USER CODE END MACADDRESS */
 
   hal_eth_init_status = HAL_ETH_Init(&heth);
@@ -280,11 +280,11 @@ static void low_level_init(struct netif *netif)
 
   /* create the task that handles the ETH_MAC */
 /* USER CODE BEGIN OS_THREAD_NEW_CMSIS_RTOS_V2 */
-  memset(&attributes, 0x0, sizeof(osThreadAttr_t));
-  attributes.name = "EthIf";
-  attributes.stack_size = INTERFACE_THREAD_STACK_SIZE;
-  attributes.priority = osPriorityRealtime;
-  osThreadNew(ethernetif_input, netif, &attributes);
+	memset( &attributes , 0x0 , sizeof(osThreadAttr_t) );
+	attributes.name = "EthIf";
+	attributes.stack_size = INTERFACE_THREAD_STACK_SIZE;
+	attributes.priority = osPriorityRealtime;
+	osThreadNew( ethernetif_input , netif , &attributes );
 /* USER CODE END OS_THREAD_NEW_CMSIS_RTOS_V2 */
 
 /* USER CODE BEGIN PHY_PRE_CONFIG */
@@ -605,14 +605,14 @@ void pbuf_free_custom(struct pbuf *p)
 /* USER CODE BEGIN 6 */
 
 /**
-* @brief  Returns the current time in milliseconds
-*         when LWIP_TIMERS == 1 and NO_SYS == 1
-* @param  None
-* @retval Current Time value
-*/
-u32_t sys_now(void)
+ * @brief  Returns the current time in milliseconds
+ *         when LWIP_TIMERS == 1 and NO_SYS == 1
+ * @param  None
+ * @retval Current Time value
+ */
+u32_t sys_now( void )
 {
-  return HAL_GetTick();
+	return HAL_GetTick();
 }
 
 /* USER CODE END 6 */
@@ -878,22 +878,22 @@ void ethernet_link_thread(void* argument)
 void HAL_ETH_RxAllocateCallback(uint8_t **buff)
 {
 /* USER CODE BEGIN HAL ETH RxAllocateCallback */
-  struct pbuf_custom *p = LWIP_MEMPOOL_ALLOC(RX_POOL);
-  if (p)
-  {
-    /* Get the buff from the struct pbuf address. */
-    *buff = (uint8_t *)p + offsetof(RxBuff_t, buff);
-    p->custom_free_function = pbuf_free_custom;
-    /* Initialize the struct pbuf.
-    * This must be performed whenever a buffer's allocated because it may be
-    * changed by lwIP or the app, e.g., pbuf_free decrements ref. */
-    pbuf_alloced_custom(PBUF_RAW, 0, PBUF_REF, p, *buff, ETH_RX_BUFFER_SIZE);
-  }
-  else
-  {
-    RxAllocStatus = RX_ALLOC_ERROR;
-    *buff = NULL;
-  }
+	struct pbuf_custom* p = LWIP_MEMPOOL_ALLOC( RX_POOL );
+	if( p )
+	{
+		/* Get the buff from the struct pbuf address. */
+		*buff = (uint8_t*) p + offsetof( RxBuff_t , buff );
+		p->custom_free_function = pbuf_free_custom;
+		/* Initialize the struct pbuf.
+		 * This must be performed whenever a buffer's allocated because it may be
+		 * changed by lwIP or the app, e.g., pbuf_free decrements ref. */
+		pbuf_alloced_custom( PBUF_RAW , 0 , PBUF_REF , p , *buff , ETH_RX_BUFFER_SIZE );
+	}
+	else
+	{
+		RxAllocStatus = RX_ALLOC_ERROR;
+		*buff = NULL;
+	}
 /* USER CODE END HAL ETH RxAllocateCallback */
 }
 
@@ -901,38 +901,38 @@ void HAL_ETH_RxLinkCallback(void **pStart, void **pEnd, uint8_t *buff, uint16_t 
 {
 /* USER CODE BEGIN HAL ETH RxLinkCallback */
 
-  struct pbuf **ppStart = (struct pbuf **)pStart;
-  struct pbuf **ppEnd = (struct pbuf **)pEnd;
-  struct pbuf *p = NULL;
+	struct pbuf** ppStart = (struct pbuf**) pStart;
+	struct pbuf** ppEnd = (struct pbuf**) pEnd;
+	struct pbuf* p = NULL;
 
-  /* Get the struct pbuf from the buff address. */
-  p = (struct pbuf *)(buff - offsetof(RxBuff_t, buff));
-  p->next = NULL;
-  p->tot_len = 0;
-  p->len = Length;
+	/* Get the struct pbuf from the buff address. */
+	p = (struct pbuf*) ( buff - offsetof( RxBuff_t , buff ) );
+	p->next = NULL;
+	p->tot_len = 0;
+	p->len = Length;
 
-  /* Chain the buffer. */
-  if (!*ppStart)
-  {
-    /* The first buffer of the packet. */
-    *ppStart = p;
-  }
-  else
-  {
-    /* Chain the buffer to the end of the packet. */
-    (*ppEnd)->next = p;
-  }
-  *ppEnd  = p;
+	/* Chain the buffer. */
+	if( !*ppStart )
+	{
+		/* The first buffer of the packet. */
+		*ppStart = p;
+	}
+	else
+	{
+		/* Chain the buffer to the end of the packet. */
+		( *ppEnd )->next = p;
+	}
+	*ppEnd = p;
 
-  /* Update the total length of all the buffers of the chain. Each pbuf in the chain should have its tot_len
-   * set to its own length, plus the length of all the following pbufs in the chain. */
-  for (p = *ppStart; p != NULL; p = p->next)
-  {
-    p->tot_len += Length;
-  }
+	/* Update the total length of all the buffers of the chain. Each pbuf in the chain should have its tot_len
+	 * set to its own length, plus the length of all the following pbufs in the chain. */
+	for( p = *ppStart ; p != NULL ; p = p->next )
+	{
+		p->tot_len += Length;
+	}
 
-  /* Invalidate data cache because Rx DMA's writing to physical memory makes it stale. */
-  SCB_InvalidateDCache_by_Addr((uint32_t *)buff, Length);
+	/* Invalidate data cache because Rx DMA's writing to physical memory makes it stale. */
+	SCB_InvalidateDCache_by_Addr( (uint32_t*) buff , Length );
 
 /* USER CODE END HAL ETH RxLinkCallback */
 }
@@ -941,7 +941,7 @@ void HAL_ETH_TxFreeCallback(uint32_t * buff)
 {
 /* USER CODE BEGIN HAL ETH TxFreeCallback */
 
-  pbuf_free((struct pbuf *)buff);
+	pbuf_free( (struct pbuf*) buff );
 
 /* USER CODE END HAL ETH TxFreeCallback */
 }
