@@ -96,26 +96,26 @@ void StartDefaultTask( void* argument );
 void HAL_RAMECC_DetectErrorCallback( RAMECC_HandleTypeDef* hramecc )
 {
 	uint32_t FAR = HAL_RAMECC_GetFailingAddress( hramecc );
-	printf( "FAR = %x" , FAR );
-
-	if( hramecc == &hramecc1_m1 )
-		printf( "    hramecc1_m1" );
-	else if( hramecc == &hramecc2_m1 )
-		printf( "    hramecc2_m1" );
-	else if( hramecc == &hramecc2_m2 )
-		printf( "    hramecc2_m2" );
-	else if( hramecc == &hramecc2_m3 )
-		printf( "    hramecc2_m3" );
-	else if( hramecc == &hramecc2_m4 )
-		printf( "    hramecc2_m4" );
-
-	if( ( HAL_RAMECC_GetRAMECCError( hramecc ) & HAL_RAMECC_SINGLEERROR_DETECTED ) != 0U )
-		printf( "    single error" );
-
-	if( ( HAL_RAMECC_GetRAMECCError( hramecc ) & HAL_RAMECC_DOUBLEERROR_DETECTED ) != 0U )
-		printf( "    double error" );
-
-	printf("\n");
+//	printf( "FAR = %x" , FAR );
+//
+//	if( hramecc == &hramecc1_m1 )
+//		printf( "    hramecc1_m1" );
+//	else if( hramecc == &hramecc2_m1 )
+//		printf( "    hramecc2_m1" );
+//	else if( hramecc == &hramecc2_m2 )
+//		printf( "    hramecc2_m2" );
+//	else if( hramecc == &hramecc2_m3 )
+//		printf( "    hramecc2_m3" );
+//	else if( hramecc == &hramecc2_m4 )
+//		printf( "    hramecc2_m4" );
+//
+//	if( ( HAL_RAMECC_GetRAMECCError( hramecc ) & HAL_RAMECC_SINGLEERROR_DETECTED ) != 0U )
+//		printf( "    single error" );
+//
+//	if( ( HAL_RAMECC_GetRAMECCError( hramecc ) & HAL_RAMECC_DOUBLEERROR_DETECTED ) != 0U )
+//		printf( "    double error" );
+//
+//	printf("\n");
 
 	hramecc->RAMECCErrorCode = HAL_RAMECC_NO_ERROR;
 }
@@ -485,6 +485,8 @@ void StartDefaultTask( void* argument )
 #else
 	tcp_loopback();
 #endif
+
+	osThreadExit();
 	/* USER CODE END 5 */
 }
 

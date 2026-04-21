@@ -14,7 +14,7 @@ Right now there are two tests in _cube_lwip_rtos_CM7/Core/Src/tests.h_.
 
 * _udp_tx_benchmark()_. It is used to test the stack by itself. There is no need to set up a server on host machine, just a packet sniffer like Wireshark is enough to validate its functionality. There are two implementations, one with the RAW API and one with the socket API.
 
-* _tcp_loopback()_. It requires the host machine to have set up its ethernet connection with the IP address 192.168.0.1 and subnet mask 255.255.255.0, and run the server.py script first. It achieves a throughput of 92.87 Mbps on the application level. Right now there is only a socket API implementation.
+* _tcp_loopback()_. It requires the host machine to have set up its ethernet connection with the IP address 192.168.0.1 and subnet mask 255.255.255.0, and run the server.py script first. It achieves a throughput of 92.87 Mbps on the application level. There are two implementations, RAW & socket API, but only the second is stable right now. The RAW implementation periodically losses chunks of data, stalls, and its performance degrades with time. Increasing the resource options for TCP and MEMP seems to alleviate the issues but not completely fixe them. Most probably, with some exploration of them the issues could be solved. For the rest of this README, the socket API implementation will be the focus, unless specified otherwise.
 
 ### Memory Management
 The following diagram shows how the RAM of the device is set up. AXI SRAM, SRAM1 and SRAM2 are exclusive to CM7 while SRAM3 is exclusive to CM4. To achieve this, the MPU settings and the linker scripts have been modified.
