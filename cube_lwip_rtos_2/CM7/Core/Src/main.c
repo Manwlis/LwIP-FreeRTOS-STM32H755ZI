@@ -26,6 +26,7 @@
 /* USER CODE BEGIN Includes */
 #include <string.h>
 
+#include "settings.h"
 #include "tests.h"
 /* USER CODE END Includes */
 
@@ -462,7 +463,6 @@ static void MX_GPIO_Init( void )
 }
 
 /* USER CODE BEGIN 4 */
-#define UDP_TX_BENCHMARK	0
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */

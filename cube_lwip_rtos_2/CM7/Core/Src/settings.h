@@ -1,0 +1,2 @@
+#define UDP_TX_BENCHMARK	0
+#define USE_SOCKETS	1

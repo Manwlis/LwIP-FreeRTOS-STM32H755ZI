@@ -1,6 +1,6 @@
-#define USE_SOCKETS	1
-
 /* Includes ------------------------------------------------------------------*/
+#include "settings.h"
+
 #if USE_SOCKETS == 0
 #include "lwip/tcp.h"
 #include "lwip/ip_addr.h"
