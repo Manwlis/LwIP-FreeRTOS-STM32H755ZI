@@ -480,7 +480,7 @@ void StartDefaultTask( void* argument )
 
 	osDelay( 100 );
 
-#if UDP_TX_BENCHMARK == 1
+#if CURRENT_TEST == UDP_TX_BENCHMARK
 	udp_tx_benchmark();
 #else
 	tcp_loopback();

@@ -1,7 +1,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "settings.h"
 
-#if USE_SOCKETS == 0
+#if LWIP_IMPLEMENTATION == RAW_API
 #include "lwip/tcp.h"
 #include "lwip/ip_addr.h"
 #include "lwip/netif.h"
@@ -15,7 +15,7 @@
 #define MESSAGE_SIZE	1460
 #define ETH_SERVER_PORT	55151
 
-#if USE_SOCKETS == 0
+#if LWIP_IMPLEMENTATION == RAW_API
 #define ETH_SERVER_IP_1	192
 #define ETH_SERVER_IP_2	168
 #define ETH_SERVER_IP_3	0
@@ -25,7 +25,7 @@
 #endif
 
 /* Typedef -----------------------------------------------------------*/
-#if USE_SOCKETS == 0
+#if LWIP_IMPLEMENTATION == RAW_API
 struct tcp_client_ctx
 {
 	struct tcp_pcb* pcb;
@@ -41,11 +41,11 @@ struct tcp_client_ctx
 const char message[MESSAGE_SIZE] = { [0 ... ( MESSAGE_SIZE - 1 )] = 1 };
 char recv_message[MESSAGE_SIZE];
 
-#if USE_SOCKETS == 0
+#if LWIP_IMPLEMENTATION == RAW_API
 static struct tcp_pcb* client_pcb;
 #endif
 /* Function prototypes -----------------------------------------------*/
-#if USE_SOCKETS == 0
+#if LWIP_IMPLEMENTATION == RAW_API
 static err_t tcp_client_connected( void* arg , struct tcp_pcb* tpcb , err_t err );
 static err_t tcp_client_recv( void* arg , struct tcp_pcb* tpcb , struct pbuf* p , err_t err );
 static err_t tcp_client_sent( void* arg , struct tcp_pcb* tpcb , u16_t len );
@@ -60,7 +60,7 @@ static void tcp_client_err( void* arg , err_t err );
 static inline void udp_tx_benchmark()
 {
 	/* Init UDP connection */
-#if USE_SOCKETS == 0
+#if LWIP_IMPLEMENTATION == RAW_API
 	ip_addr_t PC_IPADDR;
 	IP4_ADDR( &PC_IPADDR , ETH_SERVER_IP_1 , ETH_SERVER_IP_2 , ETH_SERVER_IP_3 , ETH_SERVER_IP_4 );
 
@@ -87,7 +87,7 @@ static inline void udp_tx_benchmark()
 
 	for( ; ; )
 	{
-#if USE_SOCKETS == 0
+#if LWIP_IMPLEMENTATION == RAW_API
 		struct pbuf* udp_buffer = udp_buffer = pbuf_alloc( PBUF_TRANSPORT , MESSAGE_SIZE , PBUF_RAM );
 
 		if( udp_buffer != NULL )
@@ -111,7 +111,7 @@ static inline void udp_tx_benchmark()
 static inline void tcp_loopback()
 {
 
-#if USE_SOCKETS == 0
+#if LWIP_IMPLEMENTATION == RAW_API
 
 	ip_addr_t server_ip;
 
@@ -166,17 +166,14 @@ static inline void tcp_loopback()
 //	printf( "netif: %d\n" , netif_is_up( &gnetif ) );
 //	printf( "Link: %d\n" , netif_is_link_up( &gnetif ) );
 
-#if USE_SOCKETS == 0
-#else
 	for( ; ; )
 	{
 		volatile ssize_t read_len = lwip_read( sockfd , recv_message , MESSAGE_SIZE );
 		volatile ssize_t write_len = lwip_write( sockfd , recv_message , read_len );
 	}
-#endif
 }
 
-#if USE_SOCKETS == 0
+#if LWIP_IMPLEMENTATION == RAW_API
 static void enqueue_pbuf( struct tcp_client_ctx* ctx , struct pbuf* p )
 {
 	p->next = NULL;
