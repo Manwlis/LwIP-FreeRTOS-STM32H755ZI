@@ -474,6 +474,8 @@ static void MX_GPIO_Init( void )
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask( void* argument )
 {
+	UNUSED( argument );
+
 	/* init code for LWIP */
 	MX_LWIP_Init();
 	/* USER CODE BEGIN 5 */

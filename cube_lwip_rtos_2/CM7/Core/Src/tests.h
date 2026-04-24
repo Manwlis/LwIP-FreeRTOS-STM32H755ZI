@@ -1,4 +1,4 @@
-/* Includes ------------------------------------------------------------------*/
+/* Includes ----------------------------------------------------------*/
 #include "settings.h"
 
 #if LWIP_IMPLEMENTATION == RAW_API
@@ -11,18 +11,7 @@
 
 #include <stdio.h>
 
-/* Defines ------------------------------------------------------------*/
-#define MESSAGE_SIZE	1460
-#define ETH_SERVER_PORT	55151
-
-#if LWIP_IMPLEMENTATION == RAW_API
-#define ETH_SERVER_IP_1	192
-#define ETH_SERVER_IP_2	168
-#define ETH_SERVER_IP_3	0
-#define ETH_SERVER_IP_4	1
-#else
-#define ETH_SERVER_IP	"192.168.0.1"
-#endif
+/* Defines -----------------------------------------------------------*/
 
 /* Typedef -----------------------------------------------------------*/
 #if LWIP_IMPLEMENTATION == RAW_API
@@ -45,7 +34,7 @@ char recv_message[MESSAGE_SIZE];
 static struct tcp_pcb* client_pcb;
 #endif
 /* Function prototypes -----------------------------------------------*/
-#if LWIP_IMPLEMENTATION == RAW_API
+#if ( CURRENT_TEST == TCP_LOOPBACK ) && ( LWIP_IMPLEMENTATION == RAW_API )
 static err_t tcp_client_connected( void* arg , struct tcp_pcb* tpcb , err_t err );
 static err_t tcp_client_recv( void* arg , struct tcp_pcb* tpcb , struct pbuf* p , err_t err );
 static err_t tcp_client_sent( void* arg , struct tcp_pcb* tpcb , u16_t len );
@@ -57,6 +46,7 @@ static void tcp_client_err( void* arg , err_t err );
  * @brief  UDP transmit test.
  * @retval None
  */
+#if CURRENT_TEST == UDP_TX_BENCHMARK
 static inline void udp_tx_benchmark()
 {
 	/* Init UDP connection */
@@ -103,11 +93,13 @@ static inline void udp_tx_benchmark()
 #endif
 	}
 }
+#endif
 
 /**
  * @brief  TCP loopback test.
  * @retval None
  */
+#if CURRENT_TEST == TCP_LOOPBACK
 static inline void tcp_loopback()
 {
 
@@ -331,4 +323,5 @@ static err_t tcp_client_sent( void* arg , struct tcp_pcb* tpcb , u16_t len )
 
 	return ERR_OK;
 }
+#endif
 #endif
