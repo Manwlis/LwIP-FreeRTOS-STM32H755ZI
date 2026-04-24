@@ -1,8 +1,9 @@
 // Test settings
 #define UDP_TX_BENCHMARK		0
 #define TCP_LOOPBACK			1
+#define TCP_LOOPBACK_MULTITASK	2
 
-#define CURRENT_TEST	TCP_LOOPBACK
+#define CURRENT_TEST	TCP_LOOPBACK_MULTITASK
 
 #define	RAW_API		0
 #define SOCKET_API	1
@@ -22,3 +23,7 @@
 #define ETH_SERVER_IP	"192.168.0.1"
 #endif
 
+// other
+#if CURRENT_TEST == TCP_LOOPBACK_MULTITASK
+#define NUM_NETWORK_MESSAGES 16
+#endif

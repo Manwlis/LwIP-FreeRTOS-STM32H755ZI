@@ -69,9 +69,15 @@ RAMECC_HandleTypeDef hramecc2_m4;
 
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes =
-        { .name = "defaultTask" , .stack_size = 256 * 4 , .priority = (osPriority_t) osPriorityNormal , };
+const osThreadAttr_t defaultTask_attributes = { .name = "defaultTask" , .stack_size = 256 * 4 , .priority = (osPriority_t) osPriorityNormal , };
 /* USER CODE BEGIN PV */
+#if CURRENT_TEST == TCP_LOOPBACK_MULTITASK
+osThreadId_t tx_task_handle;
+const osThreadAttr_t tx_task_attributes = { .name = "tx_task" , .stack_size = 256 * 4 , .priority = (osPriority_t) osPriorityNormal1 , };
+
+osMessageQueueId_t network_message_free;
+osMessageQueueId_t network_message_rx_to_tx;
+#endif
 
 /* USER CODE END PV */
 
@@ -83,8 +89,9 @@ static void MX_RAMECC_Init( void );
 void StartDefaultTask( void* argument );
 
 /* USER CODE BEGIN PFP */
-//static inline void udp_tx_benchmark();
-//static inline void tcp_loopback();
+#if CURRENT_TEST == TCP_LOOPBACK_MULTITASK
+void StartTxTask( void* argument );
+#endif
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -207,7 +214,17 @@ int main( void )
 	/* USER CODE END RTOS_TIMERS */
 
 	/* USER CODE BEGIN RTOS_QUEUES */
-	/* add queues, ... */
+#if CURRENT_TEST == TCP_LOOPBACK_MULTITASK
+	// initialize queues
+	network_message_free = osMessageQueueNew( NUM_NETWORK_MESSAGES , sizeof(network_message_t*) , NULL );
+	network_message_rx_to_tx = osMessageQueueNew( NUM_NETWORK_MESSAGES , sizeof(network_message_t*) , NULL );
+
+	for( int i = 0 ; i < NUM_NETWORK_MESSAGES ; i++ )
+	{
+		network_message_t* message = &network_message_pool[i];
+		osMessageQueuePut( network_message_free , &message , 0 , 0 ); // this calls xQueueSendToBack, maybe we need xQueueSend?
+	}
+#endif
 	/* USER CODE END RTOS_QUEUES */
 
 	/* Create the thread(s) */
@@ -215,7 +232,9 @@ int main( void )
 	defaultTaskHandle = osThreadNew( StartDefaultTask , NULL , &defaultTask_attributes );
 
 	/* USER CODE BEGIN RTOS_THREADS */
-	/* add threads, ... */
+#if CURRENT_TEST == TCP_LOOPBACK_MULTITASK
+	tx_task_handle = osThreadNew( StartTxTask , NULL , &tx_task_attributes );
+#endif
 	/* USER CODE END RTOS_THREADS */
 
 	/* USER CODE BEGIN RTOS_EVENTS */
@@ -484,12 +503,23 @@ void StartDefaultTask( void* argument )
 
 #if CURRENT_TEST == UDP_TX_BENCHMARK
 	udp_tx_benchmark();
-#else
+#elif CURRENT_TEST == TCP_LOOPBACK
 	tcp_loopback();
+#elif CURRENT_TEST == TCP_LOOPBACK_MULTITASK
+	tcp_set_up();
+	tcp_rx();
 #endif
 
 	osThreadExit();
 	/* USER CODE END 5 */
+}
+
+void StartTxTask( void* argument )
+{
+	UNUSED( argument );
+
+	tcp_tx();
+	osThreadExit();
 }
 
 /* MPU Configuration */
