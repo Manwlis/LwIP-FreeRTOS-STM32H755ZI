@@ -44,10 +44,12 @@ char recv_message[MESSAGE_SIZE];
 
 #if LWIP_IMPLEMENTATION == RAW_API
 static struct tcp_pcb* client_pcb;
+#else
+int sockfd;
 #endif
 
+
 #if CURRENT_TEST == TCP_LOOPBACK_MULTITASK
-int sockfd; // made it global because it has to be shared between different tasks & functions
 extern osMessageQueueId_t network_message_free;
 extern osMessageQueueId_t network_message_rx_to_tx;
 static network_message_t network_message_pool[NUM_NETWORK_MESSAGES];
@@ -62,11 +64,11 @@ static void tcp_client_err( void* arg , err_t err );
 #endif
 
 /* Functions ---------------------------------------------------------*/
+#if CURRENT_TEST == UDP_TX_BENCHMARK
 /**
  * @brief  UDP transmit test.
  * @retval None
  */
-#if CURRENT_TEST == UDP_TX_BENCHMARK
 static inline void udp_tx_benchmark()
 {
 	/* Init UDP connection */
@@ -78,7 +80,7 @@ static inline void udp_tx_benchmark()
 	udp_connect( my_udp , &PC_IPADDR , ETH_SERVER_PORT );
 
 #else
-	int sock = socket( AF_INET , SOCK_DGRAM , 0 );
+	sockfd = socket( AF_INET , SOCK_DGRAM , 0 );
 
 	struct sockaddr_in addr;
 	memset( &addr , 0 , sizeof( addr ) );
@@ -88,7 +90,7 @@ static inline void udp_tx_benchmark()
 	addr.sin_addr.s_addr = inet_addr( ETH_SERVER_IP );
 #endif
 
-	osDelay( 1000 );
+	osDelay( 200 );
 	printf( "IP: %s\n"    , ipaddr_ntoa( &gnetif.ip_addr ) );
 	printf( "Mask: %s\n"  , ipaddr_ntoa( &gnetif.netmask ) );
 	printf( "GW: %s\n"    , ipaddr_ntoa( &gnetif.gw ) );
@@ -109,20 +111,16 @@ static inline void udp_tx_benchmark()
 			pbuf_free( udp_buffer );
 		}
 #else
-		sendto( sock , message , MESSAGE_SIZE , 0 , (struct sockaddr* )&addr , sizeof( addr ) );
+		sendto( sockfd , message , MESSAGE_SIZE , 0 , (struct sockaddr* )&addr , sizeof( addr ) );
 #endif
 	}
 }
 #endif
 
-/**
- * @brief  TCP loopback test.
- * @retval None
- */
-#if CURRENT_TEST == TCP_LOOPBACK
-static inline void tcp_loopback()
-{
 
+#if ( CURRENT_TEST == TCP_LOOPBACK_MULTITASK ) || ( CURRENT_TEST == TCP_LOOPBACK )
+static void tcp_set_up()
+{
 #if LWIP_IMPLEMENTATION == RAW_API
 
 	ip_addr_t server_ip;
@@ -159,27 +157,40 @@ static inline void tcp_loopback()
 	addr.sin_port = htons( ETH_SERVER_PORT );
 	addr.sin_addr.s_addr = inet_addr( ETH_SERVER_IP );
 
-	int sockfd = lwip_socket( AF_INET , SOCK_STREAM , IPPROTO_TCP );
+	sockfd = lwip_socket( AF_INET , SOCK_STREAM , IPPROTO_TCP );
 	if( sockfd == -1 )
 		printf( "failed to create socket, errno = %d\n" , errno );
 
 	while( !netif_is_up( &gnetif ) || !netif_is_link_up( &gnetif ) )
-		osDelay( 100 );
+		osDelay( 250 );
 
+	osDelay( 1000 );
+
+	// TODO: Investigate why sometimes blocks indefinitely here. Increasing the above osDelay seems to alleviate the issue.
+	// Maybe we need for something else to be set up before trying to connect
 	int ret = lwip_connect( sockfd , (const struct sockaddr*) &addr , sizeof( addr ) );
 	if( ret < 0 )
 		printf( "failed to connect socket, errno = %d\n" , errno );
 #endif
 
-//	osDelay( 1000 );
-//	printf( "IP: %s\n" , ipaddr_ntoa( &gnetif.ip_addr ) );
-//	printf( "Mask: %s\n" , ipaddr_ntoa( &gnetif.netmask ) );
-//	printf( "GW: %s\n" , ipaddr_ntoa( &gnetif.gw ) );
-//	printf( "netif: %d\n" , netif_is_up( &gnetif ) );
-//	printf( "Link: %d\n" , netif_is_link_up( &gnetif ) );
+	printf( "IP: %s\n" , ipaddr_ntoa( &gnetif.ip_addr ) );
+	printf( "Mask: %s\n" , ipaddr_ntoa( &gnetif.netmask ) );
+	printf( "GW: %s\n" , ipaddr_ntoa( &gnetif.gw ) );
+	printf( "netif: %d\n" , netif_is_up( &gnetif ) );
+	printf( "Link: %d\n" , netif_is_link_up( &gnetif ) );
+}
+#endif
 
+#if CURRENT_TEST == TCP_LOOPBACK
+/**
+ * @brief  TCP loopback test.
+ * @retval None
+ */
+static inline void tcp_loopback()
+{
 	for( ; ; )
 	{
+		// TODO: convert this to use select
 		volatile ssize_t read_len = lwip_read( sockfd , recv_message , MESSAGE_SIZE );
 		volatile ssize_t write_len = lwip_write( sockfd , recv_message , read_len );
 	}
@@ -234,11 +245,6 @@ static void try_send( struct tcp_client_ctx* ctx )
 
 		err_t err = tcp_write( tpcb , (uint8_t*) p->payload + ctx->rx_offset , chunk , TCP_WRITE_FLAG_COPY );
 
-//		if( err == ERR_MEM )
-//		{
-//			/* Stop, retry later */
-//			return;
-//		}
 		if( err != ERR_OK )
 		{
 			printf( "tcp_write error: %d\n" , err );
@@ -343,31 +349,11 @@ static err_t tcp_client_sent( void* arg , struct tcp_pcb* tpcb , u16_t len )
 
 	return ERR_OK;
 }
-#endif
-#endif
+#endif // LWIP_IMPLEMENTATION == RAW_API
+#endif // CURRENT_TEST == TCP_LOOPBACK
+
 
 #if CURRENT_TEST == TCP_LOOPBACK_MULTITASK
-static void tcp_set_up()
-{
-	struct sockaddr_in addr;
-	memset( &addr , 0 , sizeof( addr ) );
-
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons( ETH_SERVER_PORT );
-	addr.sin_addr.s_addr = inet_addr( ETH_SERVER_IP );
-
-	sockfd = lwip_socket( AF_INET , SOCK_STREAM , IPPROTO_TCP );
-	if( sockfd == -1 )
-		printf( "failed to create socket, errno = %d\n" , errno );
-
-	while( !netif_is_up( &gnetif ) || !netif_is_link_up( &gnetif ) )
-		osDelay( 100 );
-
-	int ret = lwip_connect( sockfd , (const struct sockaddr*) &addr , sizeof( addr ) );
-	if( ret < 0 )
-		printf( "failed to connect socket, errno = %d\n" , errno );
-}
-
 static void tcp_rx()
 {
 	uint8_t msg_prio = 0;
@@ -377,7 +363,7 @@ static void tcp_rx()
 		network_message_t* message;
 
 		// Get free buffer
-		if( osMessageQueueGet( network_message_free , &message , &msg_prio , portMAX_DELAY ) != osOK )
+		if( osMessageQueueGet( network_message_free , &message , &msg_prio , osWaitForever ) != osOK )
 			continue;
 
 		// Get message
@@ -391,7 +377,7 @@ static void tcp_rx()
 			{
 				// connection closed, send message to the following task
 				message->type = CLOSED;
-				osMessageQueuePut( network_message_rx_to_tx , &message , msg_prio , portMAX_DELAY );
+				osMessageQueuePut( network_message_rx_to_tx , &message , msg_prio , osWaitForever );
 				return;
 			}
 			received_bytes += ret;
@@ -401,11 +387,11 @@ static void tcp_rx()
 		message->buffer.len = received_bytes;
 
 		// Notify next task that data is available
-		osMessageQueuePut( network_message_rx_to_tx , &message , msg_prio , portMAX_DELAY );
+		osMessageQueuePut( network_message_rx_to_tx , &message , msg_prio , osWaitForever );
 	}
 }
 
-void tcp_tx()
+static void tcp_tx()
 {
 	uint8_t msg_prio = 0;
 
@@ -414,7 +400,7 @@ void tcp_tx()
 		network_message_t* message;
 
 		// Wait until a message is available
-		if( osMessageQueueGet( network_message_rx_to_tx , &message , &msg_prio , portMAX_DELAY ) != osOK )
+		if( osMessageQueueGet( network_message_rx_to_tx , &message , &msg_prio , osWaitForever ) != osOK )
 			continue;
 
 		if( message->type == CLOSED )
@@ -442,7 +428,7 @@ void tcp_tx()
 		}
 
 		// Return buffer to pool
-		osMessageQueuePut( network_message_free , &message , msg_prio , portMAX_DELAY );
+		osMessageQueuePut( network_message_free , &message , msg_prio , osWaitForever );
 	}
 }
 #endif

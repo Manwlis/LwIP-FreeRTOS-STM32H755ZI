@@ -504,6 +504,7 @@ void StartDefaultTask( void* argument )
 #if CURRENT_TEST == UDP_TX_BENCHMARK
 	udp_tx_benchmark();
 #elif CURRENT_TEST == TCP_LOOPBACK
+	tcp_set_up();
 	tcp_loopback();
 #elif CURRENT_TEST == TCP_LOOPBACK_MULTITASK
 	tcp_set_up();
@@ -514,6 +515,7 @@ void StartDefaultTask( void* argument )
 	/* USER CODE END 5 */
 }
 
+#if ( CURRENT_TEST == TCP_LOOPBACK_MULTITASK )
 void StartTxTask( void* argument )
 {
 	UNUSED( argument );
@@ -521,6 +523,7 @@ void StartTxTask( void* argument )
 	tcp_tx();
 	osThreadExit();
 }
+#endif
 
 /* MPU Configuration */
 
