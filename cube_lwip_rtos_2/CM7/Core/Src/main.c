@@ -28,6 +28,9 @@
 
 #include "settings.h"
 #include "tests.h"
+#if CURRENT_TEST == TCP_LOOPBACK_MULTITASK
+#include "queue.h"
+#endif
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -67,9 +70,11 @@ RAMECC_HandleTypeDef hramecc2_m2;
 RAMECC_HandleTypeDef hramecc2_m3;
 RAMECC_HandleTypeDef hramecc2_m4;
 
+TIM_HandleTypeDef htim17;
+
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = { .name = "defaultTask" , .stack_size = 256 * 4 , .priority = (osPriority_t) osPriorityNormal , };
+const osThreadAttr_t defaultTask_attributes = { .name = "defaultTask" , .stack_size = 512 * 4 , .priority = (osPriority_t) osPriorityNormal , };
 /* USER CODE BEGIN PV */
 #if CURRENT_TEST == TCP_LOOPBACK_MULTITASK
 osThreadId_t tx_task_handle;
@@ -86,6 +91,7 @@ void SystemClock_Config( void );
 static void MPU_Config( void );
 static void MX_GPIO_Init( void );
 static void MX_RAMECC_Init( void );
+static void MX_TIM17_Init( void );
 void StartDefaultTask( void* argument );
 
 /* USER CODE BEGIN PFP */
@@ -194,6 +200,7 @@ int main( void )
 	/* Initialize all configured peripherals */
 	MX_GPIO_Init();
 	MX_RAMECC_Init();
+	MX_TIM17_Init();
 	/* USER CODE BEGIN 2 */
 
 	/* USER CODE END 2 */
@@ -224,6 +231,9 @@ int main( void )
 		network_message_t* message = &network_message_pool[i];
 		osMessageQueuePut( network_message_free , &message , 0 , 0 ); // this calls xQueueSendToBack, maybe we need xQueueSend?
 	}
+
+	vQueueAddToRegistry( network_message_free , "network_msg_free" );
+	vQueueAddToRegistry( network_message_rx_to_tx , "network_msg_rx_to_tx" );
 #endif
 	/* USER CODE END RTOS_QUEUES */
 
@@ -235,6 +245,7 @@ int main( void )
 #if CURRENT_TEST == TCP_LOOPBACK_MULTITASK
 	tx_task_handle = osThreadNew( StartTxTask , NULL , &tx_task_attributes );
 #endif
+
 	/* USER CODE END RTOS_THREADS */
 
 	/* USER CODE BEGIN RTOS_EVENTS */
@@ -451,6 +462,38 @@ static void MX_RAMECC_Init( void )
 }
 
 /**
+ * @brief TIM17 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_TIM17_Init( void )
+{
+
+	/* USER CODE BEGIN TIM17_Init 0 */
+
+	/* USER CODE END TIM17_Init 0 */
+
+	/* USER CODE BEGIN TIM17_Init 1 */
+
+	/* USER CODE END TIM17_Init 1 */
+	htim17.Instance = TIM17;
+	htim17.Init.Prescaler = 0;
+	htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim17.Init.Period = 1999;
+	htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	htim17.Init.RepetitionCounter = 0;
+	htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+	if( HAL_TIM_Base_Init( &htim17 ) != HAL_OK )
+	{
+		Error_Handler();
+	}
+	/* USER CODE BEGIN TIM17_Init 2 */
+
+	/* USER CODE END TIM17_Init 2 */
+
+}
+
+/**
  * @brief GPIO Initialization Function
  * @param None
  * @retval None
@@ -482,37 +525,13 @@ static void MX_GPIO_Init( void )
 }
 
 /* USER CODE BEGIN 4 */
-/* USER CODE END 4 */
 
-/* USER CODE BEGIN Header_StartDefaultTask */
-/**
- * @brief  Function implementing the defaultTask thread.
- * @param  argument: Not used
- * @retval None
- */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask( void* argument )
+void BSP_PB_Callback( Button_TypeDef Button )
 {
-	UNUSED( argument );
+	if( Button == BUTTON_USER )
+	{
 
-	/* init code for LWIP */
-	MX_LWIP_Init();
-	/* USER CODE BEGIN 5 */
-
-	osDelay( 100 );
-
-#if CURRENT_TEST == UDP_TX_BENCHMARK
-	udp_tx_benchmark();
-#elif CURRENT_TEST == TCP_LOOPBACK
-	tcp_set_up();
-	tcp_loopback();
-#elif CURRENT_TEST == TCP_LOOPBACK_MULTITASK
-	tcp_set_up();
-	tcp_rx();
-#endif
-
-	osThreadExit();
-	/* USER CODE END 5 */
+	}
 }
 
 #if ( CURRENT_TEST == TCP_LOOPBACK_MULTITASK )
@@ -524,6 +543,39 @@ void StartTxTask( void* argument )
 	osThreadExit();
 }
 #endif
+/* USER CODE END 4 */
+
+/* USER CODE BEGIN Header_StartDefaultTask */
+/**
+ * @brief  Function implementing the defaultTask thread.
+ * @param  argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_StartDefaultTask */
+void StartDefaultTask( void* argument )
+{
+	/* init code for LWIP */
+	MX_LWIP_Init();
+	/* USER CODE BEGIN 5 */
+	UNUSED( argument );
+
+	osDelay( 100 );
+
+#if CURRENT_TEST == UDP_TX_BENCHMARK
+	udp_tx_benchmark();
+#elif CURRENT_TEST == TCP_LOOPBACK
+	tcp_set_up();
+#if LWIP_IMPLEMENTATION == SOCKET_API
+	tcp_loopback();
+#endif
+#elif CURRENT_TEST == TCP_LOOPBACK_MULTITASK
+	tcp_set_up();
+	tcp_rx();
+#endif
+
+	osThreadExit();
+	/* USER CODE END 5 */
+}
 
 /* MPU Configuration */
 

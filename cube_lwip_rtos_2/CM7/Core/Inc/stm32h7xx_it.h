@@ -55,6 +55,7 @@ void DebugMon_Handler(void);
 void EXTI15_10_IRQHandler(void);
 void TIM6_DAC_IRQHandler(void);
 void ETH_IRQHandler(void);
+void TIM17_IRQHandler(void);
 void ECC_IRQHandler(void);
 /* USER CODE BEGIN EFP */
 

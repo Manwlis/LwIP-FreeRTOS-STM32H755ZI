@@ -10,13 +10,15 @@ This README provides a high-level overview of the project and focuses on the mos
 
 ### Test Suite
 
-Right now there are two tests in _cube_lwip_rtos_CM7/Core/Src/tests.h_.
+Right now there are three tests in _cube_lwip_rtos_CM7/Core/Src/tests.h_.
 
-* _udp_tx_benchmark()_. It is used to test the stack by itself. There is no need to set up a server on host machine, just a packet sniffer like Wireshark is enough to validate its functionality. There are two implementations, one with the RAW API and one with the socket API.
+* __UDP_TX_BENCHMARK__: It is used to test the stack by itself. There is no need to set up a server on host machine, just a packet sniffer like Wireshark is enough to validate its functionality. There are two implementations, one with the RAW API and one with the socket API.
 
-* _tcp_loopback()_. It requires the host machine to have set up its ethernet connection with the IP address 192.168.0.1 and subnet mask 255.255.255.0, and run the server.py script first. It achieves a throughput of 92.87 Mbps on the application level. There are two implementations, RAW & socket API, but only the second is stable right now. The RAW implementation periodically losses chunks of data, stalls, and its performance degrades with time. Increasing the resource options for TCP and MEMP seems to alleviate the issues but not completely fixe them. Most probably, with some exploration of them the issues could be solved. For the rest of this README, the socket API implementation will be the focus, unless specified otherwise.
+* __TCP_LOOPBACK__: It requires the host machine to have set up its ethernet connection with the IP address 192.168.0.1 and subnet mask 255.255.255.0, and run the server.py script first. It achieves a throughput of 92.87 Mbps on the application level. There are two implementations, RAW & socket API, but only the second is stable right now. The RAW implementation periodically losses chunks of data, stalls, and its performance degrades with time. Increasing the resource options for TCP and MEMP seems to alleviate the issues but not completely fixe them. Most probably, with some exploration of them the issues could be solved. For the rest of this README, the socket API implementation will be the focus, unless specified otherwise.
 
-### Memory Management
+* __TCP_LOOPBACK_MULTITASK__: Similar to the previous test, but Tx and Rx are done in different tasks, to better simulate an actual application. There is only a socket API implementation.
+
+### Resource Allocation
 The following diagram shows how the RAM of the device is set up. AXI SRAM, SRAM1 and SRAM2 are exclusive to CM7 while SRAM3 is exclusive to CM4. To achieve this, the MPU settings and the linker scripts have been modified.
 
 ![Memory Management Scheme](./docs/mem_managment.png)
@@ -25,14 +27,17 @@ The MPU settings follow the logic of the STM guides. LwIP heap and the DMA descr
 
 The used memory can be pruned quite a bit if such a need arises.
 
-FreeRTOS has a heap of 15360 Words while the following threads exist:
-| Task            | Stack Size |
-|-----------------|-----------:|
-| defaultTask     | 256 words  |
-| EthLink         | 256 words* |
-| tcpip_thread    | 2048 words |
-| slipif_loop     | 1024 words |
-| lwIP            | 2048 words |
+FreeRTOS has a heap of 61440 bytes, with only 3-4 kBytes being used:
+
+**Test 1 Socket API Resource Consumption**<br />![Test 1 Resource Consumption](docs/test1_resource_consumption.PNG)
+
+**Test 2 Socket API Resource Consumption**<br />![Test 2 Resource Consumption](docs/test2_resource_consumption.PNG)
+
+
+**Test 3 Socket API Resource Consumption**<br />![Test 3 Resource Consumption](docs/test3_resource_consumption.PNG)
+
+In contrast, the utilization of the CPU is quite high, especially in the case of the TCP protocol. Its utilization is halved with the RAW API. Most of the time, the MCU just moves data around, its utilization would greatly be reduced with a zero-copy scheme. 
+
 
 > [!WARNING]  
 > _EthLink_ is set to 87 words by default, this produces hard crashes. It can not be changed in CubeMX, the macro _INTERFACE_THREAD_STACK_SIZE_ in _ethernetif.c_ has to be modified.

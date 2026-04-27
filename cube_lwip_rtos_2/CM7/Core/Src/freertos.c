@@ -52,6 +52,27 @@
 
 /* USER CODE END FunctionPrototypes */
 
+/* Hook prototypes */
+void configureTimerForRunTimeStats(void);
+unsigned long getRunTimeCounterValue(void);
+
+/* USER CODE BEGIN 1 */
+/* Functions needed when configGENERATE_RUN_TIME_STATS is on */
+__weak void configureTimerForRunTimeStats(void)
+{
+	extern volatile unsigned long ulHighFrequencyTimerTicks;
+    ulHighFrequencyTimerTicks = 0;
+	extern TIM_HandleTypeDef htim17;
+	HAL_TIM_Base_Start_IT(&htim17);
+}
+
+extern volatile unsigned long ulHighFrequencyTimerTicks;
+__weak unsigned long getRunTimeCounterValue(void)
+{
+	return ulHighFrequencyTimerTicks;
+}
+/* USER CODE END 1 */
+
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
 
