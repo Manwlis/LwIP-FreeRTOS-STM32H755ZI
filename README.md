@@ -93,6 +93,7 @@ cube_lwip_rtos_2/
 docs/
 server.py  # TCP loopback server
 ```
+
 ## Tools Used
 * STM32CubeMX 6.17.0
 * STM32Cube FW_H7 V1.13.0
@@ -101,6 +102,3 @@ server.py  # TCP loopback server
 * CMSIS-RTOS 2.1.3
 * LwIP 2.2.1
 
-## TODOs
-* TCP loopback RAW API implementation
-* TCP loopback where the send and receive are in different tasks in order to mimic a real application where there is a pipeline between them.

@@ -33,14 +33,14 @@ typedef struct
 	struct network_mbuf_t
 	{
 		size_t len;
-		uint8_t data[MESSAGE_SIZE];
+		uint8_t data[NETWORK_MESSAGE_SIZE];
 	} buffer; // buffer for the messages received from the network
 } network_message_t;
 #endif
 
 /* Variables ---------------------------------------------------------*/
-const char message[MESSAGE_SIZE] = { [0 ... ( MESSAGE_SIZE - 1 )] = 1 };
-char recv_message[MESSAGE_SIZE];
+const char message[NETWORK_MESSAGE_SIZE] = { [0 ... ( NETWORK_MESSAGE_SIZE - 1 )] = 1 };
+char recv_message[NETWORK_MESSAGE_SIZE];
 
 #if LWIP_IMPLEMENTATION == RAW_API
 static struct tcp_pcb* client_pcb;
@@ -99,18 +99,18 @@ static inline void udp_tx_benchmark()
 	for( ; ; )
 	{
 #if LWIP_IMPLEMENTATION == RAW_API
-		struct pbuf* udp_buffer = udp_buffer = pbuf_alloc( PBUF_TRANSPORT , MESSAGE_SIZE , PBUF_RAM );
+		struct pbuf* udp_buffer = udp_buffer = pbuf_alloc( PBUF_TRANSPORT , NETWORK_MESSAGE_SIZE , PBUF_RAM );
 
 		if( udp_buffer != NULL )
 		{
-			memcpy( udp_buffer->payload , message , MESSAGE_SIZE );
+			memcpy( udp_buffer->payload , message , NETWORK_MESSAGE_SIZE );
 			LOCK_TCPIP_CORE();
 			udp_send( my_udp , udp_buffer );
 			UNLOCK_TCPIP_CORE();
 			pbuf_free( udp_buffer );
 		}
 #else
-		sendto( sockfd , message , MESSAGE_SIZE , 0 , (struct sockaddr* )&addr , sizeof( addr ) );
+		sendto( sockfd , message , NETWORK_MESSAGE_SIZE , 0 , (struct sockaddr* )&addr , sizeof( addr ) );
 #endif
 	}
 }
@@ -190,7 +190,7 @@ static inline void tcp_loopback()
 	for( ; ; )
 	{
 		// TODO: convert this to use select
-		volatile ssize_t read_len = lwip_read( sockfd , recv_message , MESSAGE_SIZE );
+		volatile ssize_t read_len = lwip_read( sockfd , recv_message , NETWORK_MESSAGE_SIZE );
 		volatile ssize_t write_len = lwip_write( sockfd , recv_message , read_len );
 	}
 }
@@ -368,9 +368,9 @@ static void tcp_rx()
 		// Get message
 		size_t received_bytes = 0;
 
-		while( received_bytes < MESSAGE_SIZE )
+		while( received_bytes < NETWORK_MESSAGE_SIZE )
 		{
-			int ret = lwip_read( sockfd , message->buffer.data + received_bytes , MESSAGE_SIZE - received_bytes );
+			int ret = lwip_read( sockfd , message->buffer.data + received_bytes , NETWORK_MESSAGE_SIZE - received_bytes );
 
 			if( ret <= 0 )
 			{
